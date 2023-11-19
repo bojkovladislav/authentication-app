@@ -2,7 +2,7 @@
 
 Welcome to the Authentication App! This application combines the power of Node.js, PostgreSQL, and React to provide a robust and aesthetically pleasing authentication system. 
 
-![App Screenshot](screenshot.png)
+![App Screenshot]("./public/registration-page.png")
 
 ## 👋 Introduction
 

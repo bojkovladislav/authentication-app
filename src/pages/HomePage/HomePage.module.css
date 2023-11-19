@@ -1,0 +1,54 @@
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  text-align: center;
+}
+
+.notLoggedIn {
+  color: #333;
+}
+
+.notLoggedIn h1 {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.authLinks {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.link {
+  text-decoration: none;
+  color: #007bff;
+  font-weight: bold;
+}
+
+.separator {
+  margin: 0 10px;
+}
+
+.loggedIn {
+  color: #333;
+}
+
+.loggedIn h1 {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.userInfo {
+  text-align: left;
+}
+
+.userInfo h3 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.userInfo p {
+  font-size: 16px;
+  margin-bottom: 5px;
+}
