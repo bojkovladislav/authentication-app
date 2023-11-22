@@ -1,7 +1,6 @@
 import { upperFirst } from '@mantine/hooks';
 import { useForm } from '@mantine/form';
 import { Dispatch, SetStateAction, useState } from 'react';
-import { Loader } from '@mantine/core';
 import { googleLogin, login, register } from '../../api/authorization.js';
 import {
   TextInput,
@@ -11,6 +10,7 @@ import {
   Group,
   PaperProps,
   Button,
+  Loader,
   Divider,
   Checkbox,
   Anchor,
@@ -21,14 +21,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { setItem } from '../../utils/localStorageHelpers.js';
 
-  interface Props extends PaperProps {
-    type: 'login' | 'register';
-    notification: string;
-    setNotification: (notification: string) => void;
-    setAuthorizedUserData?: Dispatch<
-      SetStateAction<{ name: null | string; email: null | string }>
-    >;
-  }
+interface Props extends PaperProps {
+  type: 'login' | 'register';
+  notification: string;
+  setNotification: (notification: string) => void;
+  setAuthorizedUserData?: Dispatch<
+    SetStateAction<{ name: null | string; email: null | string }>
+  >;
+}
 
 export function AuthenticationForm(props: Props) {
   const navigate = useNavigate();
@@ -109,13 +109,13 @@ export function AuthenticationForm(props: Props) {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    try {
-      await googleLogin();
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  // const handleGoogleLogin = async () => {
+  //   try {
+  //     await googleLogin();
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
 
   useEffect(() => {
     clearForm();
@@ -135,9 +135,14 @@ export function AuthenticationForm(props: Props) {
           </Text>
 
           <Group grow mb="md" mt="md">
-            <GoogleButton radius="xl" onClick={handleGoogleLogin}>
+            <Link to="http://localhost:3000/auth/google">
+            <GoogleButton
+              radius="xl"
+              // onClick={async () => await handleGoogleLogin()}
+            >
               Google
             </GoogleButton>
+            </Link>
           </Group>
 
           <Divider
@@ -194,12 +199,7 @@ export function AuthenticationForm(props: Props) {
                 radius="md"
               />
               {type === 'login' && (
-                <Anchor
-                  component="a"
-                  type="reset"
-                  c="dimmed"
-                  size="xs"
-                >
+                <Anchor component="a" type="reset" c="dimmed" size="xs">
                   <Link to="/forgot-password">
                     Forgot password? Click to reset.
                   </Link>

@@ -12,6 +12,7 @@ import { Activation } from './pages/ActivationPage/Activation';
 import { getItem } from './utils/localStorageHelpers';
 import { ForgotPassword } from './pages/ForgotPassword/ForgotPassword';
 import { ResetPassword } from './components/ResetPassword/ResetPassword';
+import { ConfirmationPage } from './pages/ConfirmationPage/ConfirmationPage';
 
 const Main = styled.main({
   padding: '20px',
@@ -44,6 +45,7 @@ function App() {
   }, [notification]);
 
   useEffect(() => {
+    console.log(authorizedUserData);
     const userDataFromStorage = getItem('AuthorizedUserData');
 
     if (!userDataFromStorage) return;
@@ -70,7 +72,12 @@ function App() {
         <Routes>
           <Route
             path="/"
-            element={<HomePage authorizedUserData={authorizedUserData} />}
+            element={
+              <HomePage
+                authorizedUserData={authorizedUserData}
+                setAuthorizedUserData={setAuthorizedUserData}
+              />
+            }
           />
           <Route path="/users" element={<Users />} />
           <Route
@@ -121,6 +128,11 @@ function App() {
                 <ResetPassword />
               </div>
             }
+          />
+
+          <Route
+            path="/confirmation/:confirmationToken"
+            element={<ConfirmationPage />}
           />
 
           <Route path="*" element={<NotFoundPage />} />

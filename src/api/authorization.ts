@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = 'https://auth-backend-hxdm.onrender.com';
 
 interface Data {
   name: string;
@@ -17,7 +17,7 @@ export const activate = (activationToken: string) => {
 };
 
 export const logout = (userId: number) => {
-  return axios.post(`${BASE_URL}/logout/${userId}`);
+  return axios.get(`${BASE_URL}/logout/${userId}`, { withCredentials: true });
 };
 
 export const getUsers = () => {
@@ -47,5 +47,39 @@ export const forgotPassword = (email: string) => {
 };
 
 export const resetPassword = (resetToken: string, newPassword: string) => {
-  return axios.post(`${BASE_URL}/reset-password/${resetToken}`, { newPassword })
-}
+  return axios.patch(`${BASE_URL}/reset-password/${resetToken}`, {
+    newPassword,
+  });
+};
+
+export const updateName = (id: number, updatedName: string) => {
+  return axios.patch(`${BASE_URL}/update-name/${id}`, { updatedName });
+};
+
+export const sendConfirmationEmail = (
+  id: string,
+  newEmail: string,
+  password: string
+) => {
+  return axios.post(`${BASE_URL}/send-confirmation-email/${id}`, {
+    email: newEmail,
+    password,
+  });
+};
+
+export const updateEmail = (confirmationToken: string) => {
+  return axios.patch(`${BASE_URL}/update-email/${confirmationToken}`);
+};
+
+export const updatePassword = <T>(
+  id: number,
+  oldPassword: T,
+  newPassword: T,
+  confirmation: T
+) => {
+  return axios.patch(`${BASE_URL}/update-password/${id}`, {
+    oldPassword,
+    newPassword,
+    confirmation,
+  });
+};
