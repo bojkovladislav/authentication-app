@@ -37,6 +37,8 @@ export const Activation: FC<Props> = ({ setAuthorizedUserData }) => {
   }, []);
 
   useEffect(() => {
+    if (loading) return;
+
     if (currentSecond > 0) {
       const timer = setTimeout(() => {
         setCurrentSecond(currentSecond - 1);
@@ -48,7 +50,7 @@ export const Activation: FC<Props> = ({ setAuthorizedUserData }) => {
     if (currentSecond === 0) {
       navigate('/');
     }
-  }, [currentSecond]);
+  }, [currentSecond, loading]);
 
   return (
     <div>
