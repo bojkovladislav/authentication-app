@@ -1,7 +1,7 @@
 import { upperFirst } from '@mantine/hooks';
 import { useForm } from '@mantine/form';
 import { Dispatch, SetStateAction, useState } from 'react';
-import { googleLogin, login, register } from '../../api/authorization.js';
+import { login, register } from '../../api/authorization.js';
 import {
   TextInput,
   PasswordInput,
@@ -35,6 +35,9 @@ export function AuthenticationForm(props: Props) {
   const { notification, setNotification, type, setAuthorizedUserData } = props;
   const [loading, setLoading] = useState(false);
   const [isActivationLinkSent, setIsActivationLinkSent] = useState(false);
+
+  console.log(notification);
+
   const form = useForm({
     initialValues: {
       email: '',

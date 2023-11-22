@@ -3,8 +3,8 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { Button } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import styled from 'styled-components';
-import { logout } from '../../api/authorization';
-import { getItem, removeItem } from '../../utils/localStorageHelpers';
+// import { logout } from '../../api/authorization';
+import { removeItem } from '../../utils/localStorageHelpers';
 
 const leftSide = [
   {
@@ -55,7 +55,7 @@ export const Header: FC<Props> = ({
 
   const handleLogOut = async () => {
     try {
-      const { user } = getItem('AuthorizedUserData');
+      // const { user } = getItem('AuthorizedUserData');
 
       // await logout(user.id);
 
