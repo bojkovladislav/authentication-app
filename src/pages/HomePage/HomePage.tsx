@@ -1,5 +1,5 @@
-import { FC, useState, Dispatch, SetStateAction } from 'react';
-import { NormalizedUser } from '../../utils/Types';
+import { FC, useState, Dispatch, SetStateAction, useEffect } from 'react';
+import { AuthorizedUserData, NormalizedUser, NotificationType } from '../../utils/Types';
 import { Link } from 'react-router-dom';
 import styles from './HomePage.module.css';
 import { useForm } from '@mantine/form';
@@ -22,8 +22,9 @@ import { getItem, setItem } from '../../utils/localStorageHelpers';
 interface Props {
   authorizedUserData: NormalizedUser;
   setAuthorizedUserData: Dispatch<
-    SetStateAction<{ name: null | string; email: null | string }>
+    SetStateAction<AuthorizedUserData>
   >;
+  setNotification: (notification: NotificationType) => void;
 }
 
 interface Wrapper {
@@ -38,15 +39,11 @@ interface Form extends PaperProps {
 export const HomePage: FC<Props> = ({
   authorizedUserData,
   setAuthorizedUserData,
+  setNotification,
 }) => {
   const [isNameTriggered, setIsNameTriggered] = useState(false);
   const [isEmailTriggered, setIsEmailTriggered] = useState(false);
   const [isPasswordTriggered, setIsPasswordTriggered] = useState(false);
-  const [currentNameError, setCurrentNameError] = useState<string | null>(null);
-  const [
-    sendEmailConfirmationCompletedMessage,
-    setSendConfirmationCompletedMessage,
-  ] = useState('');
   const nameOfLocalUserData = 'AuthorizedUserData';
   const userDataFromStorage = getItem(nameOfLocalUserData);
 
@@ -72,24 +69,29 @@ export const HomePage: FC<Props> = ({
 
   const handleNameUpdate = async (
     newName: string,
-    setLoading: (loading: boolean) => void
+    setLoading: (loading: boolean) => void,
+    form: any
   ) => {
     if (!userDataFromStorage) return;
 
     setLoading(true);
-    setCurrentNameError(null);
 
     try {
       const response = await updateName(userDataFromStorage.user.id, newName);
       const { name } = response.data.updatedUser;
+      const { user, accessToken } = userDataFromStorage;
 
       setItem(nameOfLocalUserData, {
-        user: { name, ...userDataFromStorage.user },
+        user: { ...userDataFromStorage.user, name },
+        accessToken: userDataFromStorage.accessToken,
       });
-      setAuthorizedUserData({ name, email: userDataFromStorage.user.email });
+      setAuthorizedUserData({ name, email: user.email, accessToken  });
       setIsNameTriggered(false);
+      setNotification({
+        message: 'You have successfully updated a name!',
+      });
     } catch (error: any) {
-      setCurrentNameError(error.response.data.message);
+      form.setFieldError('newName', error.response.data.errors.name);
     } finally {
       setLoading(false);
     }
@@ -98,11 +100,11 @@ export const HomePage: FC<Props> = ({
   const handleSendEmailConfirmation = async (
     newEmail: string,
     password: string,
-    setLoading: (loading: boolean) => void
+    setLoading: (loading: boolean) => void,
+    form: any
   ) => {
     if (!userDataFromStorage) return;
 
-    setSendConfirmationCompletedMessage('');
     setLoading(true);
 
     try {
@@ -111,9 +113,13 @@ export const HomePage: FC<Props> = ({
         newEmail,
         password
       );
-      setSendConfirmationCompletedMessage(response.data.message);
+      setNotification({
+        message: response.data.message,
+      });
     } catch (error: any) {
-      console.log(error);
+      const { email, password } = error.response.data.errors;
+
+      form.setErrors({ password, newEmail: email });
     } finally {
       setLoading(false);
     }
@@ -123,7 +129,8 @@ export const HomePage: FC<Props> = ({
     oldPassword: string,
     newPassword: string,
     confirmation: string,
-    setLoading: (loading: boolean) => void
+    setLoading: (loading: boolean) => void,
+    form: any
   ) => {
     if (!userDataFromStorage) return;
 
@@ -137,10 +144,19 @@ export const HomePage: FC<Props> = ({
         confirmation
       );
 
-      console.log(response);
       setIsPasswordTriggered(false);
-    } catch (error) {
-      console.log(error);
+      setNotification({
+        message: response.data.message,
+      });
+    } catch (error: any) {
+      const { oldPassword, newPassword, confirmation } =
+        error.response.data.errors;
+
+      form.setErrors({
+        oldPassword,
+        newPassword,
+        confirmation,
+      });
     } finally {
       setLoading(false);
     }
@@ -155,11 +171,8 @@ export const HomePage: FC<Props> = ({
         newName: '',
       },
       validate: {
-        newName: (val: any) => {
-          if (/\d/.test(val)) return 'Name cannot contain any numbers!';
-
-          return currentNameError;
-        },
+        newName: (val: any) =>
+          /\d/.test(val) ? 'Name cannot contain any numbers!' : null,
       },
     });
 
@@ -169,17 +182,13 @@ export const HomePage: FC<Props> = ({
         password: '',
       },
       validate: {
-        newEmail: (val: any) => {
-          if (!/^\S+@\S+$/.test(val)) return 'Invalid email!';
+        newEmail: (val: any) =>
+          !/^\S+@\S+$/.test(val) ? 'Invalid email!' : null,
 
-          return null;
-        },
-        password: (val: any) => {
-          if (val.length < 6)
-            return 'Password should be at least 6 characters length!';
-
-          return null;
-        },
+        password: (val: any) =>
+          val.length < 6
+            ? 'Password should be at least 6 characters length!'
+            : null,
       },
     });
 
@@ -188,6 +197,10 @@ export const HomePage: FC<Props> = ({
         oldPassword: '',
         newPassword: '',
         confirmation: '',
+      },
+      validate: {
+        newPassword: (val: any) =>
+          val.length < 6 ? 'Your password length should be more than 6!' : null,
       },
     });
 
@@ -202,7 +215,8 @@ export const HomePage: FC<Props> = ({
                 async () =>
                   await handleNameUpdate(
                     updateNameForm.values.newName,
-                    setLoading
+                    setLoading,
+                    updateNameForm
                   )
               )();
             }
@@ -215,7 +229,8 @@ export const HomePage: FC<Props> = ({
                   await handleSendEmailConfirmation(
                     newEmail,
                     password,
-                    setLoading
+                    setLoading,
+                    sendEmailConfirmationForm
                   )
               )();
             }
@@ -230,7 +245,8 @@ export const HomePage: FC<Props> = ({
                     oldPassword,
                     newPassword,
                     confirmation,
-                    setLoading
+                    setLoading,
+                    updatePasswordForm
                   )
               )();
             }
@@ -282,10 +298,6 @@ export const HomePage: FC<Props> = ({
                   }
                   radius="md"
                 />
-
-                {!!sendEmailConfirmationCompletedMessage.length && (
-                  <p>{sendEmailConfirmationCompletedMessage}</p>
-                )}
               </>
             )}
 
@@ -373,6 +385,20 @@ export const HomePage: FC<Props> = ({
       </>
     );
   };
+
+  useEffect(() => {
+    const urlSearchParams = new URLSearchParams(window.location.search);
+
+    const name = urlSearchParams.get('name');
+    const email = urlSearchParams.get('email');
+    const accessToken = urlSearchParams.get('accessToken');
+    const id = urlSearchParams.get('id');
+
+    if (name && email && accessToken) {
+      setAuthorizedUserData({ name, email, accessToken });
+      setItem(nameOfLocalUserData, { user: { id, name, email }, accessToken });
+    }
+  }, []);
 
   return (
     <div className={styles.container}>

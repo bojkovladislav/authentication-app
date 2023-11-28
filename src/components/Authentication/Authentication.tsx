@@ -20,23 +20,19 @@ import { GoogleButton } from './GoogleButton';
 import { Link, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { setItem } from '../../utils/localStorageHelpers.js';
+import { AuthorizedUserData, NotificationType } from '../../utils/Types.js';
 
 interface Props extends PaperProps {
   type: 'login' | 'register';
-  notification: string;
-  setNotification: (notification: string) => void;
-  setAuthorizedUserData?: Dispatch<
-    SetStateAction<{ name: null | string; email: null | string }>
-  >;
+  setNotification: (notification: NotificationType) => void;
+  setAuthorizedUserData?: Dispatch<SetStateAction<AuthorizedUserData>>;
 }
 
 export function AuthenticationForm(props: Props) {
   const navigate = useNavigate();
-  const { notification, setNotification, type, setAuthorizedUserData } = props;
+  const { setNotification, type, setAuthorizedUserData } = props;
   const [loading, setLoading] = useState(false);
   const [isActivationLinkSent, setIsActivationLinkSent] = useState(false);
-
-  console.log(notification);
 
   const form = useForm({
     initialValues: {
@@ -47,6 +43,8 @@ export function AuthenticationForm(props: Props) {
     },
 
     validate: {
+      name: (val: any) =>
+        /\d/.test(val) ? 'Name cannot contain any numbers!' : null,
       email: (val: any) => (/^\S+@\S+$/.test(val) ? null : 'Invalid email'),
       password: (val: any) =>
         val.length <= 6
@@ -56,10 +54,7 @@ export function AuthenticationForm(props: Props) {
   });
 
   const clearForm = () => {
-    form.setFieldValue('email', '');
-    form.setFieldValue('name', '');
-    form.setFieldValue('password', '');
-    form.setFieldValue('terms', false);
+    form.reset();
   };
 
   const handleToggle = () => {
@@ -81,8 +76,17 @@ export function AuthenticationForm(props: Props) {
       await register({ name, email, password });
 
       setIsActivationLinkSent(true);
+      setNotification({
+        message:
+          'You have been successfully registered! Activate your email please!',
+      });
     } catch (error: any) {
-      setNotification(error.response.data.message);
+      const errors = error.response.data.errors;
+      const message = error.response.data.message;
+
+      setNotification({ message, error: true });
+
+      form.setErrors({ email: errors.email, password: errors.password });
     } finally {
       setLoading(false);
     }
@@ -99,26 +103,29 @@ export function AuthenticationForm(props: Props) {
       setItem('AuthorizedUserData', response.data);
 
       if (setAuthorizedUserData) {
-        setAuthorizedUserData({ name: response.data.user.name, email });
+        setAuthorizedUserData({
+          name: response.data.user.name,
+          email,
+          accessToken: response.data.accessToken,
+        });
       }
 
       clearForm();
-      setNotification('');
+      setNotification({
+        message: `Welcome ${response.data.user.name}!`,
+      });
       navigate('/');
     } catch (error: any) {
-      setNotification(error.response.data.message);
+      const errors = error.response.data.errors;
+      const message = error.response.data.message;
+
+      setNotification({ message, error: true });
+
+      form.setErrors({ email: errors.email, password: errors.password });
     } finally {
       setLoading(false);
     }
   };
-
-  // const handleGoogleLogin = async () => {
-  //   try {
-  //     await googleLogin();
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // };
 
   useEffect(() => {
     clearForm();
@@ -132,20 +139,15 @@ export function AuthenticationForm(props: Props) {
           <p>We have sent you an email with activation link</p>
         </div>
       ) : (
-        <Paper radius="md" p="xl" withBorder {...props}>
+        <Paper radius="md" p="xl" withBorder>
           <Text size="lg" fw={500}>
             Welcome to Authentication app, {type} with
           </Text>
 
           <Group grow mb="md" mt="md">
-            <Link to="http://localhost:3000/auth/google">
-            <GoogleButton
-              radius="xl"
-              // onClick={async () => await handleGoogleLogin()}
-            >
-              Google
-            </GoogleButton>
-            </Link>
+            <a href="http://auth-backend-hxdm.onrender.com/auth/google">
+              <GoogleButton radius="xl">Google</GoogleButton>
+            </a>
           </Group>
 
           <Divider
@@ -183,7 +185,7 @@ export function AuthenticationForm(props: Props) {
                 onChange={(event) =>
                   form.setFieldValue('email', event.currentTarget.value)
                 }
-                error={form.errors.email && 'Invalid email'}
+                error={form.errors.email}
                 radius="md"
               />
 
@@ -195,18 +197,13 @@ export function AuthenticationForm(props: Props) {
                 onChange={(event) =>
                   form.setFieldValue('password', event.currentTarget.value)
                 }
-                error={
-                  form.errors.password &&
-                  'Password should include at least 6 characters'
-                }
+                error={form.errors.password}
                 radius="md"
               />
               {type === 'login' && (
-                <Anchor component="a" type="reset" c="dimmed" size="xs">
-                  <Link to="/forgot-password">
-                    Forgot password? Click to reset.
-                  </Link>
-                </Anchor>
+                <Link to="/forgot-password" style={{ fontSize: '12px' }}>
+                  Forgot password? Click to reset.
+                </Link>
               )}
 
               {type === 'register' && (

@@ -1,6 +1,8 @@
 import axios from 'axios';
+import { getItem } from '../utils/localStorageHelpers';
 
 const BASE_URL = 'https://auth-backend-hxdm.onrender.com';
+// const BASE_URL = 'http://localhost:3000';
 
 interface Data {
   name: string;
@@ -17,7 +19,11 @@ export const activate = (activationToken: string) => {
 };
 
 export const logout = (userId: number) => {
-  return axios.get(`${BASE_URL}/logout/${userId}`, { withCredentials: true });
+  return axios.post(
+    `${BASE_URL}/logout/${userId}`,
+    {},
+    { withCredentials: true }
+  );
 };
 
 export const getUsers = () => {
@@ -31,7 +37,11 @@ export const sendActivationLink = (name: string, email: string) => {
 };
 
 export const login = (email: string, password: string) => {
-  return axios.post(`${BASE_URL}/login`, { email, password });
+  return axios.post(
+    `${BASE_URL}/login`,
+    { email, password },
+    { withCredentials: true }
+  );
 };
 
 export const googleLogin = () => {
@@ -53,7 +63,31 @@ export const resetPassword = (resetToken: string, newPassword: string) => {
 };
 
 export const updateName = (id: number, updatedName: string) => {
-  return axios.patch(`${BASE_URL}/update-name/${id}`, { updatedName });
+  const { accessToken } = getItem('AuthorizedUserData');
+
+  return axios.patch(
+    `${BASE_URL}/update-name/${id}`,
+    { updatedName },
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    }
+  );
+};
+
+export const refresh = (
+  userId: number,
+  oldAccessToken: string
+): Promise<{
+  data: {
+    message: string;
+    accessToken: string;
+  };
+}> => {
+  return axios.post(
+    `${BASE_URL}/refresh/${userId}`,
+    { oldAccessToken },
+    { withCredentials: true }
+  );
 };
 
 export const sendConfirmationEmail = (
@@ -61,14 +95,30 @@ export const sendConfirmationEmail = (
   newEmail: string,
   password: string
 ) => {
-  return axios.post(`${BASE_URL}/send-confirmation-email/${id}`, {
-    email: newEmail,
-    password,
-  });
+  const { accessToken } = getItem('AuthorizedUserData');
+
+  return axios.post(
+    `${BASE_URL}/send-confirmation-email/${id}`,
+    {
+      email: newEmail,
+      password,
+    },
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    }
+  );
 };
 
 export const updateEmail = (confirmationToken: string) => {
-  return axios.patch(`${BASE_URL}/update-email/${confirmationToken}`);
+  const { accessToken } = getItem('AuthorizedUserData');
+
+  return axios.patch(
+    `${BASE_URL}/update-email/${confirmationToken}`,
+    {},
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    }
+  );
 };
 
 export const updatePassword = <T>(
@@ -77,9 +127,17 @@ export const updatePassword = <T>(
   newPassword: T,
   confirmation: T
 ) => {
-  return axios.patch(`${BASE_URL}/update-password/${id}`, {
-    oldPassword,
-    newPassword,
-    confirmation,
-  });
+  const { accessToken } = getItem('AuthorizedUserData');
+
+  return axios.patch(
+    `${BASE_URL}/update-password/${id}`,
+    {
+      oldPassword,
+      newPassword,
+      confirmation,
+    },
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    }
+  );
 };

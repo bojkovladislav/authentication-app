@@ -2,10 +2,11 @@ import { Dispatch, FC, useEffect, useState, SetStateAction } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { activate } from '../../api/authorization';
 import { setItem } from '../../utils/localStorageHelpers';
+import { AuthorizedUserData } from '../../utils/Types';
 
 interface Props {
   setAuthorizedUserData: Dispatch<
-    SetStateAction<{ name: null | string; email: null | string }>
+    SetStateAction<AuthorizedUserData>
   >;
 }
 
@@ -28,7 +29,7 @@ export const Activation: FC<Props> = ({ setAuthorizedUserData }) => {
   
           setLoading(true);
           setItem('AuthorizedUserData', res.data);
-          setAuthorizedUserData({ name, email });
+          setAuthorizedUserData({ name, email, accessToken: res.data.accessToken });
           setMessage('You have been successfully activated!');
         })
         .catch(setError)

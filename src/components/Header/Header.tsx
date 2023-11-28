@@ -1,10 +1,12 @@
-import { Dispatch, FC, SetStateAction } from 'react';
+import { Dispatch, FC, SetStateAction, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Button } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import styled from 'styled-components';
-// import { logout } from '../../api/authorization';
-import { removeItem } from '../../utils/localStorageHelpers';
+import { logout } from '../../api/authorization';
+import { getItem, removeItem } from '../../utils/localStorageHelpers';
+import { AuthorizedUserData, NotificationType } from '../../utils/Types';
+import { Loader } from '@mantine/core';
 
 const leftSide = [
   {
@@ -28,15 +30,18 @@ const rightSide = [
 interface Props {
   userAuthorized: boolean;
   setAuthorizedUserData: Dispatch<
-    SetStateAction<{ name: null | string; email: null | string }>
+    SetStateAction<AuthorizedUserData>
   >;
+  setNotification: (notification: NotificationType) => void;
 }
 
 export const Header: FC<Props> = ({
   userAuthorized,
   setAuthorizedUserData,
+  setNotification,
 }) => {
   const location = useLocation();
+  const [loading, setLoading] = useState(false);
   const StyledHeader = styled.header({
     display: 'flex',
     justifyContent: 'space-between',
@@ -55,14 +60,24 @@ export const Header: FC<Props> = ({
 
   const handleLogOut = async () => {
     try {
-      // const { user } = getItem('AuthorizedUserData');
+      const { user } = getItem('AuthorizedUserData');
+      setLoading(true);
 
-      // await logout(user.id);
+      await logout(user.id);
 
-      setAuthorizedUserData({ name: null, email: null });
+      setAuthorizedUserData({ name: null, email: null, accessToken: null });
       removeItem('AuthorizedUserData');
+      setNotification({
+        message: "You've been successfully logged out",
+      });
     } catch (error) {
-      console.log(error);
+      setNotification({
+        message: 'Something went wrong during logout!',
+        error: true,
+      });
+      setLoading(false);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -84,8 +99,14 @@ export const Header: FC<Props> = ({
       </HeaderContainer>
 
       {userAuthorized ? (
-        <Button variant="dark" size="sm" onClick={handleLogOut}>
-          Log out
+        <Button
+          variant="dark"
+          size="sm"
+          onClick={handleLogOut}
+          disabled={loading}
+          style={{ width: '100px' }}
+        >
+          {loading ? <Loader color="blue" size="xs" /> : 'Log out'}
         </Button>
       ) : (
         <HeaderContainer className="right-side">

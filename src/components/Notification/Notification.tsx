@@ -1,13 +1,14 @@
-import { FC, useState } from 'react';
+import { FC, useState, useEffect } from 'react';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import Toast from 'react-bootstrap/Toast';
 import styled from 'styled-components';
+import { NotificationType } from '../../utils/Types';
 
 interface Props {
-  message: string;
   title: string;
-  variant: string;
+  notification: NotificationType;
+  setNotification: (notification: NotificationType) => void;
 }
 
 const Container = styled.div({
@@ -17,8 +18,28 @@ const Container = styled.div({
   left: 10,
 });
 
-export const Notification: FC<Props> = ({ message, title, variant }) => {
+export const Notification: FC<Props> = ({
+  title,
+  notification,
+  setNotification,
+}) => {
   const [show, setShow] = useState(true);
+
+  useEffect(() => {
+    let timeout: number | null;
+
+    if (notification.message.length) {
+      timeout = setTimeout(() => {
+        setNotification({ message: '', error: false });
+      }, 5000);
+    }
+
+    return () => {
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+    };
+  }, [notification]);
 
   return (
     <Container>
@@ -29,7 +50,7 @@ export const Notification: FC<Props> = ({ message, title, variant }) => {
             show={show}
             delay={5000}
             autohide
-            bg={variant}
+            bg={!notification.error ? 'success' : 'danger'}
           >
             <Toast.Header>
               <img
@@ -39,7 +60,9 @@ export const Notification: FC<Props> = ({ message, title, variant }) => {
               />
               <strong className="me-auto">{title}</strong>
             </Toast.Header>
-            <Toast.Body className="text-white">{message}</Toast.Body>
+            <Toast.Body className="text-white">
+              {notification.message}
+            </Toast.Body>
           </Toast>
         </Col>
       </Row>
