@@ -2,8 +2,14 @@ import { FC, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { updateEmail } from '../../api/authorization';
 import { getItem, setItem } from '../../utils/localStorageHelpers';
+import { NotificationType } from '../../utils/Types';
+import { MessageBlock } from '../../components/MessageBlock/MessageBlock';
 
-export const ConfirmationPage: FC = () => {
+interface Props {
+  setNotification: (notification: NotificationType) => void;
+}
+
+export const ConfirmationPage: FC<Props> = ({ setNotification }) => {
   const params = useParams();
   const navigate = useNavigate();
 
@@ -25,12 +31,21 @@ export const ConfirmationPage: FC = () => {
           navigate('/');
         }, 2000);
       })
-      .catch((err) => console.log(err));
+      .catch((err) => {
+        setNotification({
+          message: 'Your confirmation token is not valid anymore :(',
+          error: true,
+        });
+        navigate('/');
+        console.log(err);
+      });
 
     return () => {
       clearTimeout(timeout);
     };
   }, []);
 
-  return <div>Confirming email...</div>;
+  return (
+    <MessageBlock title="Confirmation page" message="Confirming email..." />
+  );
 };

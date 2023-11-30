@@ -10,11 +10,17 @@ import {
   rem,
   keys,
 } from '@mantine/core';
-import { IconSelector, IconChevronDown, IconChevronUp, IconSearch } from '@tabler/icons-react';
+import { useMediaQuery } from '@mantine/hooks';
+import {
+  IconSelector,
+  IconChevronDown,
+  IconChevronUp,
+  IconSearch,
+} from '@tabler/icons-react';
 import classes from './TableSort.module.css';
 
 export interface RowData {
-  id: string,
+  id: number;
   name: string;
   email: string;
 }
@@ -27,7 +33,11 @@ interface ThProps {
 }
 
 function Th({ children, reversed, sorted, onSort }: ThProps) {
-  const Icon = sorted ? (reversed ? IconChevronUp : IconChevronDown) : IconSelector;
+  const Icon = sorted
+    ? reversed
+      ? IconChevronUp
+      : IconChevronDown
+    : IconSelector;
   return (
     <Table.Th className={classes.th}>
       <UnstyledButton onClick={onSort} className={classes.control}>
@@ -47,7 +57,9 @@ function Th({ children, reversed, sorted, onSort }: ThProps) {
 function filterData(data: RowData[], search: string) {
   const query = search.toLowerCase().trim();
   return data.filter((item) =>
-    keys(data[0]).some((key) => item[key].toLowerCase().includes(query))
+    keys(data[0]).some((key) =>
+      item[key].toString().toLowerCase().includes(query)
+    )
   );
 }
 
@@ -63,11 +75,22 @@ function sortData(
 
   return filterData(
     [...data].sort((a, b) => {
-      if (payload.reversed) {
-        return b[sortBy].localeCompare(a[sortBy]);
-      }
+      const valueA = a[sortBy];
+      const valueB = b[sortBy];
 
-      return a[sortBy].localeCompare(b[sortBy]);
+      if (payload.reversed) {
+        if (typeof valueA === 'number' && typeof valueB === 'number') {
+          return valueB - valueA;
+        } else {
+          return String(valueB).localeCompare(String(valueA));
+        }
+      } else {
+        if (typeof valueA === 'number' && typeof valueB === 'number') {
+          return valueA - valueB;
+        } else {
+          return String(valueA).localeCompare(String(valueB));
+        }
+      }
     }),
     payload.search
   );
@@ -78,6 +101,7 @@ export const UsersTable = ({ data }: { data: RowData[] }) => {
   const [sortedData, setSortedData] = useState(data);
   const [sortBy, setSortBy] = useState<keyof RowData | null>(null);
   const [reverseSortDirection, setReverseSortDirection] = useState(false);
+  const onMobile = useMediaQuery('(max-width: 450px)');
 
   const setSorting = (field: keyof RowData) => {
     const reversed = field === sortBy ? !reverseSortDirection : false;
@@ -89,7 +113,9 @@ export const UsersTable = ({ data }: { data: RowData[] }) => {
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = event.currentTarget;
     setSearch(value);
-    setSortedData(sortData(data, { sortBy, reversed: reverseSortDirection, search: value }));
+    setSortedData(
+      sortData(data, { sortBy, reversed: reverseSortDirection, search: value })
+    );
   };
 
   const rows = sortedData.map((row) => (
@@ -101,18 +127,29 @@ export const UsersTable = ({ data }: { data: RowData[] }) => {
   ));
 
   return (
-    <ScrollArea>
+    <ScrollArea w={onMobile ? '300px' : '100%'}>
       <TextInput
+        w={onMobile ? '300px' : '100%'}
         placeholder="Search by any field"
         mb="md"
-        leftSection={<IconSearch style={{ width: rem(16), height: rem(16) }} stroke={1.5} />}
+        leftSection={
+          <IconSearch
+            style={{ width: rem(16), height: rem(16) }}
+            stroke={1.5}
+          />
+        }
         value={search}
         onChange={handleSearchChange}
       />
-      <Table horizontalSpacing="md" verticalSpacing="xs" miw={700} layout="fixed">
+      <Table
+        horizontalSpacing="xs"
+        verticalSpacing="md"
+        miw={700}
+        layout="fixed"
+      >
         <Table.Tbody>
           <Table.Tr>
-          <Th
+            <Th
               sorted={sortBy === 'id'}
               reversed={reverseSortDirection}
               onSort={() => setSorting('id')}
@@ -151,4 +188,4 @@ export const UsersTable = ({ data }: { data: RowData[] }) => {
       </Table>
     </ScrollArea>
   );
-}
+};

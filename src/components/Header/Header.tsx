@@ -1,4 +1,5 @@
-import { Dispatch, FC, SetStateAction, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useState, useContext } from 'react';
+import { Sun, Moon } from 'react-bootstrap-icons';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Button } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -7,6 +8,8 @@ import { logout } from '../../api/authorization';
 import { getItem, removeItem } from '../../utils/localStorageHelpers';
 import { AuthorizedUserData, NotificationType } from '../../utils/Types';
 import { Loader } from '@mantine/core';
+import { ThemeContext } from '../ThemeProvider/ThemeProvider';
+import { useThemeStyle } from '../../hooks/useThemeStyle';
 
 const leftSide = [
   {
@@ -29,9 +32,7 @@ const rightSide = [
 
 interface Props {
   userAuthorized: boolean;
-  setAuthorizedUserData: Dispatch<
-    SetStateAction<AuthorizedUserData>
-  >;
+  setAuthorizedUserData: Dispatch<SetStateAction<AuthorizedUserData>>;
   setNotification: (notification: NotificationType) => void;
 }
 
@@ -42,11 +43,13 @@ export const Header: FC<Props> = ({
 }) => {
   const location = useLocation();
   const [loading, setLoading] = useState(false);
+  const { theme, setTheme } = useContext(ThemeContext);
+  const setThemeStyle = useThemeStyle();
   const StyledHeader = styled.header({
     display: 'flex',
     justifyContent: 'space-between',
     padding: '10px 20px',
-    borderBottom: '1px solid #dee2e6',
+    borderBottom: `1px solid ${theme === 'light' ? '#dee2e6' : '#373a40'}`,
   });
 
   const HeaderContainer = styled.ul({
@@ -57,6 +60,18 @@ export const Header: FC<Props> = ({
     justifyContent: 'center',
     alignItems: 'center',
   });
+
+  const ThemeChangeButton = () => {
+    return (
+      <Button
+        variant={theme === 'light' ? 'warning' : 'primary'}
+        size="sm"
+        onClick={handleChangeTheme}
+      >
+        {theme === 'light' ? <Sun color="#000" /> : <Moon color="#fff" />}
+      </Button>
+    );
+  };
 
   const handleLogOut = async () => {
     try {
@@ -81,6 +96,9 @@ export const Header: FC<Props> = ({
     }
   };
 
+  const handleChangeTheme = () =>
+    theme === 'light' ? setTheme('dark') : setTheme('light');
+
   return (
     <StyledHeader>
       <HeaderContainer className="left-side">
@@ -89,8 +107,11 @@ export const Header: FC<Props> = ({
             key={name}
             to={url}
             style={{
-              color: '#1a1b1e',
-              borderBottom: location.pathname === url ? '1px solid #000' : '',
+              color: `${setThemeStyle('#1a1b1e', '#dee2e6')}`,
+              borderBottom:
+                location.pathname === url
+                  ? `1px solid ${setThemeStyle('#1a1b1e', '#dee2e6')}`
+                  : '',
             }}
           >
             {name}
@@ -98,30 +119,35 @@ export const Header: FC<Props> = ({
         ))}
       </HeaderContainer>
 
-      {userAuthorized ? (
-        <Button
-          variant="dark"
-          size="sm"
-          onClick={handleLogOut}
-          disabled={loading}
-          style={{ width: '100px' }}
-        >
-          {loading ? <Loader color="blue" size="xs" /> : 'Log out'}
-        </Button>
-      ) : (
-        <HeaderContainer className="right-side">
-          {rightSide.map(({ name, url }) => (
+      <HeaderContainer className="right-side">
+        {userAuthorized ? (
+          <Button
+            variant={setThemeStyle('dark', 'light')}
+            size="sm"
+            onClick={handleLogOut}
+            disabled={loading}
+            style={{ width: '100px', height: '40px' }}
+          >
+            {loading ? <Loader color="blue" size="xs" /> : 'Log out'}
+          </Button>
+        ) : (
+          rightSide.map(({ name, url }) => (
             <NavLink to={url} key={name}>
               <Button
-                variant={`${name === 'Sign up' ? 'outline-dark' : 'dark'}`}
+                variant={`${
+                  name === 'Sign up'
+                    ? setThemeStyle('outline-dark', 'outline-light')
+                    : setThemeStyle('dark', 'light')
+                }`}
                 size="sm"
               >
                 {name}
               </Button>
             </NavLink>
-          ))}
-        </HeaderContainer>
-      )}
+          ))
+        )}
+        <ThemeChangeButton />
+      </HeaderContainer>
     </StyledHeader>
   );
 };

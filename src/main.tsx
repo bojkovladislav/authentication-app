@@ -2,12 +2,14 @@ import ReactDOM from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 import App from './App.tsx';
 import '@mantine/core/styles.css';
-import { MantineProvider } from '@mantine/core';
+import {
+  ThemeProvider,
+} from './components/ThemeProvider/ThemeProvider.tsx';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <HashRouter>
-    <MantineProvider>
+    <ThemeProvider>
       <App />
-    </MantineProvider>
+    </ThemeProvider>
   </HashRouter>
 );

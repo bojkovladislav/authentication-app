@@ -30,7 +30,8 @@ export const ForgotPassword: FC = (props: PaperProps) => {
     try {
       await forgotPassword(form.values.email);
       setIsConfirmationSent(true);
-    } catch (error) {
+    } catch (error: any) {
+      form.setFieldError('email', error.response.errors.email);
       console.log(error);
     } finally {
       setLoading(false);

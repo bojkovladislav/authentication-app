@@ -1,8 +1,14 @@
 import { FC, useState, Dispatch, SetStateAction, useEffect } from 'react';
-import { AuthorizedUserData, NormalizedUser, NotificationType } from '../../utils/Types';
+import {
+  AuthorizedUserData,
+  NormalizedUser,
+  NotificationType,
+} from '../../utils/Types';
 import { Link } from 'react-router-dom';
 import styles from './HomePage.module.css';
+import { useMediaQuery } from '@mantine/hooks';
 import { useForm } from '@mantine/form';
+import styled from 'styled-components';
 import {
   TextInput,
   Loader,
@@ -18,12 +24,11 @@ import {
   updatePassword,
 } from '../../api/authorization';
 import { getItem, setItem } from '../../utils/localStorageHelpers';
+import { useThemeStyle } from '../../hooks/useThemeStyle';
 
 interface Props {
   authorizedUserData: NormalizedUser;
-  setAuthorizedUserData: Dispatch<
-    SetStateAction<AuthorizedUserData>
-  >;
+  setAuthorizedUserData: Dispatch<SetStateAction<AuthorizedUserData>>;
   setNotification: (notification: NotificationType) => void;
 }
 
@@ -46,6 +51,8 @@ export const HomePage: FC<Props> = ({
   const [isPasswordTriggered, setIsPasswordTriggered] = useState(false);
   const nameOfLocalUserData = 'AuthorizedUserData';
   const userDataFromStorage = getItem(nameOfLocalUserData);
+  const setThemeStyle = useThemeStyle();
+  const onMobile = useMediaQuery('(max-width: 450px)');
 
   const userData = {
     name: authorizedUserData.name,
@@ -85,7 +92,7 @@ export const HomePage: FC<Props> = ({
         user: { ...userDataFromStorage.user, name },
         accessToken: userDataFromStorage.accessToken,
       });
-      setAuthorizedUserData({ name, email: user.email, accessToken  });
+      setAuthorizedUserData({ name, email: user.email, accessToken });
       setIsNameTriggered(false);
       setNotification({
         message: 'You have successfully updated a name!',
@@ -365,8 +372,11 @@ export const HomePage: FC<Props> = ({
     return (
       <>
         <div className={styles.flexContainer} key={name}>
-          <p>{`${name}: ${value}`}</p>
+          <p
+            style={{ fontSize: onMobile ? '13px' : '' }}
+          >{`${name}: ${value}`}</p>
           <span
+            style={{ fontSize: onMobile ? '13px' : '' }}
             onClick={() => handleTrigger(name.toLowerCase())}
             className={styles.change}
           >
@@ -386,6 +396,10 @@ export const HomePage: FC<Props> = ({
     );
   };
 
+  const StyledTitle = styled.h1({
+    color: setThemeStyle('#1a1b1e', '#dee2e6'),
+  });
+
   useEffect(() => {
     const urlSearchParams = new URLSearchParams(window.location.search);
 
@@ -404,12 +418,17 @@ export const HomePage: FC<Props> = ({
     <div className={styles.container}>
       {Object.values(authorizedUserData).every((v) => v === null) ? (
         <div className={styles.notLoggedIn}>
-          <h1>You don't have a cabinet yet</h1>
+          <StyledTitle>You don't have a cabinet yet</StyledTitle>
           <div className={styles.authLinks}>
             <Link to={'/sign-up'} className={styles.link}>
               Sign up
             </Link>
-            <span className={styles.separator}>or</span>
+            <span
+              className={styles.separator}
+              style={{ color: setThemeStyle('#1a1b1e', '#dee2e6') }}
+            >
+              or
+            </span>
             <Link to={'/sign-in'} className={styles.link}>
               Sign in
             </Link>
@@ -418,9 +437,13 @@ export const HomePage: FC<Props> = ({
       ) : (
         <>
           <div className={styles.loggedIn}>
-            <h1>{`Welcome, ${authorizedUserData.name}!`}</h1>
+            <h1
+              style={{ color: setThemeStyle('#1a1b1e', '#dee2e6') }}
+            >{`Welcome, ${authorizedUserData.name}!`}</h1>
             <div className={styles.userInfo}>
-              <h3>Your Info:</h3>
+              <h3 style={{ color: setThemeStyle('#1a1b1e', '#dee2e6') }}>
+                Your Info:
+              </h3>
             </div>
           </div>
 

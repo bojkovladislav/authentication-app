@@ -1,9 +1,11 @@
 import { Route, Routes, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useContext, FC, ReactNode } from 'react';
+import { MantineProvider } from '@mantine/core';
+import styled from 'styled-components';
+import { useMediaQuery } from '@mantine/hooks';
 import './App.scss';
 import { Header } from './components/Header/Header';
 import { HomePage } from './pages/HomePage/HomePage';
-import styled from 'styled-components';
 import { AuthenticationForm } from './components/Authentication/Authentication';
 import { Notification } from './components/Notification/Notification';
 import { NotFoundPage } from './pages/NotFoundPage/NotFoundPage';
@@ -16,10 +18,13 @@ import { ConfirmationPage } from './pages/ConfirmationPage/ConfirmationPage';
 import { GoogleAuth } from './pages/GoogleAuth/GoogleAuth';
 import { AuthorizedUserData, NotificationType } from './utils/Types';
 import { logout, refresh } from './api/authorization';
+import { ThemeContext } from './components/ThemeProvider/ThemeProvider';
 
 const Main = styled.main({
   padding: '20px',
 });
+
+const nameOfUserData = 'AuthorizedUserData';
 
 function App() {
   const [notification, setNotification] = useState<NotificationType>({
@@ -33,39 +38,57 @@ function App() {
       accessToken: null,
     });
   const navigate = useNavigate();
-  const nameOfUserData = 'AuthorizedUserData';
+  const userAuthorized = useMemo(() => {
+    return Object.values(authorizedUserData).every((v) => v !== null);
+  }, [authorizedUserData]);
+
+  const { theme, setTheme } = useContext(ThemeContext);
+  const onMobile = useMediaQuery('(max-width: 450px)');
+
+  const AuthFormWrapper: FC<{ children: ReactNode }> = ({ children }) => (
+    <div
+      style={{
+        width: `${onMobile ? '300px' : '600px'}`,
+        margin: '0 auto',
+      }}
+    >
+      {children}
+    </div>
+  );
+
+  const userLogout = async (id: number) => {
+    try {
+      await logout(id);
+
+      setNotification({
+        message:
+          'Your refresh token has expired!\nPlease, log in one more time.',
+        error: true,
+      });
+      removeItem(nameOfUserData);
+      setAuthorizedUserData({ name: null, email: null, accessToken: null });
+      navigate('/sign-in');
+    } catch (error) {
+      console.log('Error during logout, ', error);
+    }
+  };
 
   const silentRefreshAccessToken = async () => {
-    const currentUserData = getItem(nameOfUserData);
+    const userDataFromStorage = getItem(nameOfUserData);
+    const { user, accessToken } = userDataFromStorage;
 
     try {
-      const response = await refresh(
-        currentUserData.user.id,
-        currentUserData.accessToken
-      );
+      const response = await refresh(user.id, accessToken);
 
       setItem(nameOfUserData, {
-        ...currentUserData,
+        ...userDataFromStorage,
         accessToken: response.data.accessToken,
       });
     } catch (error: any) {
       const { status } = error.response;
 
       if (status === 401) {
-        try {
-          await logout(currentUserData.user.id);
-
-          setNotification({
-            message:
-              'Your refresh token has expired!\nPlease, log in one more time.',
-            error: true,
-          });
-          removeItem(nameOfUserData);
-          setAuthorizedUserData({ name: null, email: null, accessToken: null });
-          navigate('/sign-in');
-        } catch (error) {
-          console.log('Error during logout, ', error);
-        }
+        await userLogout(user.id);
       } else if (status === 400) {
         setNotification({
           message: 'Your access token is still valid!',
@@ -92,6 +115,11 @@ function App() {
 
   useEffect(() => {
     const userDataFromStorage = getItem(nameOfUserData);
+    const themeFromStorage = localStorage.getItem('theme') as 'light' | 'dark';
+
+    if (themeFromStorage) {
+      setTheme(themeFromStorage);
+    }
 
     if (!userDataFromStorage) return;
 
@@ -104,12 +132,14 @@ function App() {
     }
   }, []);
 
+  useEffect(() => {
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
   return (
-    <>
+    <MantineProvider forceColorScheme={theme}>
       <Header
-        userAuthorized={Object.values(authorizedUserData).every(
-          (v) => v !== null
-        )}
+        userAuthorized={userAuthorized}
         setAuthorizedUserData={setAuthorizedUserData}
         setNotification={setNotification}
       />
@@ -126,80 +156,76 @@ function App() {
               />
             }
           />
-          <Route path="/users" element={<Users />} />
 
-          {!(
-            authorizedUserData.name &&
-            authorizedUserData.email &&
-            authorizedUserData.accessToken
-          ) && (
-            <Route
-              path="/sign-up"
-              element={
-                <div style={{ width: '600px', margin: '0 auto' }}>
-                  <AuthenticationForm
-                    type="register"
-                    setNotification={setNotification}
-                  />
-                </div>
-              }
-            />
+          <Route
+            path="/users"
+            element={<Users setNotification={setNotification} />}
+          />
+
+          {!userAuthorized && (
+            <>
+              <Route
+                path="/sign-up"
+                element={
+                  <AuthFormWrapper>
+                    <AuthenticationForm
+                      type="register"
+                      setNotification={setNotification}
+                    />
+                  </AuthFormWrapper>
+                }
+              />
+
+              <Route
+                path="/sign-in"
+                element={
+                  <AuthFormWrapper>
+                    <AuthenticationForm
+                      type="login"
+                      setNotification={setNotification}
+                      setAuthorizedUserData={setAuthorizedUserData}
+                    />
+                  </AuthFormWrapper>
+                }
+              />
+
+              <Route
+                path="/activate/:activationToken"
+                element={
+                  <Activation setAuthorizedUserData={setAuthorizedUserData} />
+                }
+              />
+
+              <Route
+                path="/forgot-password"
+                element={
+                  <div style={{ width: '600px', margin: '0 auto' }}>
+                    <ForgotPassword />
+                  </div>
+                }
+              />
+
+              <Route
+                path="/reset-password/:resetToken"
+                element={
+                  <div style={{ width: '600px', margin: '0 auto' }}>
+                    <ResetPassword />
+                  </div>
+                }
+              />
+
+              <Route
+                path="/google-auth"
+                element={
+                  <GoogleAuth setAuthorizedUserData={setAuthorizedUserData} />
+                }
+              />
+            </>
           )}
-
-          {!(
-            authorizedUserData.name &&
-            authorizedUserData.email &&
-            authorizedUserData.accessToken
-          ) && (
-            <Route
-              path="/sign-in"
-              element={
-                <div style={{ width: '600px', margin: '0 auto' }}>
-                  <AuthenticationForm
-                    type="login"
-                    setNotification={setNotification}
-                    setAuthorizedUserData={setAuthorizedUserData}
-                  />
-                </div>
-              }
-            />
-          )}
-
-          <Route
-            path="/activate/:activationToken"
-            element={
-              <Activation setAuthorizedUserData={setAuthorizedUserData} />
-            }
-          />
-
-          <Route
-            path="/forgot-password"
-            element={
-              <div style={{ width: '600px', margin: '0 auto' }}>
-                <ForgotPassword />
-              </div>
-            }
-          />
-
-          <Route
-            path="/reset-password/:resetToken"
-            element={
-              <div style={{ width: '600px', margin: '0 auto' }}>
-                <ResetPassword />
-              </div>
-            }
-          />
 
           <Route
             path="/confirmation/:confirmationToken"
-            element={<ConfirmationPage />}
-          />
-
-          <Route
-            path="/google-auth"
-            element={
-              <GoogleAuth setAuthorizedUserData={setAuthorizedUserData} />
-            }
+            element={<ConfirmationPage setNotification={setNotification} />}
           />
 
           <Route path="*" element={<NotFoundPage />} />
@@ -213,7 +239,7 @@ function App() {
           />
         )}
       </Main>
-    </>
+    </MantineProvider>
   );
 }
 

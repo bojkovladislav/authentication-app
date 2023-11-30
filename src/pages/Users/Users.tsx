@@ -1,9 +1,10 @@
 import { FC, useEffect, useState } from 'react';
 import { getUsers } from '../../api/authorization';
 import { Loader } from '@mantine/core';
-import { User } from '../../utils/Types';
+import { NotificationType, User } from '../../utils/Types';
 import { UsersTable } from '../../components/UsersTable/UsersTable';
 import styled from 'styled-components';
+import { useThemeStyle } from '../../hooks/useThemeStyle';
 
 const UsersContainer = styled.div({
   display: 'flex',
@@ -13,9 +14,14 @@ const UsersContainer = styled.div({
   alignItems: 'center',
 });
 
-export const Users: FC = () => {
+interface Props {
+  setNotification: (Notification: NotificationType) => void;
+}
+
+export const Users: FC<Props> = ({ setNotification }) => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const setThemeStyle = useThemeStyle();
 
   const handleGetUsers = async () => {
     try {
@@ -24,6 +30,7 @@ export const Users: FC = () => {
       setLoading(true);
       setUsers(users.data);
     } catch (error) {
+      setNotification({ message: 'Failed to get users!', error: true });
       console.log('Failed to get users!', error);
     } finally {
       setLoading(false);
@@ -36,11 +43,13 @@ export const Users: FC = () => {
 
   const renderTable = () => {
     return !users.length ? (
-      <h1>There are no users yet</h1>
+      <h1 style={{ color: setThemeStyle('#1a1b1e', '#dee2e6') }}>
+        There are no users yet
+      </h1>
     ) : (
       <UsersTable
         data={users.map(({ id, name, email }) => ({
-          id: id.toString(),
+          id,
           name,
           email,
         }))}
@@ -50,7 +59,14 @@ export const Users: FC = () => {
 
   return (
     <UsersContainer>
-      <h1 style={{ alignSelf: 'flex-start' }}>Users</h1>
+      <h1
+        style={{
+          alignSelf: 'flex-start',
+          color: setThemeStyle('#1a1b1e', '#dee2e6'),
+        }}
+      >
+        Users
+      </h1>
       {loading ? <Loader /> : renderTable()}
     </UsersContainer>
   );

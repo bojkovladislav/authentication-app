@@ -35,7 +35,8 @@ export const ResetPassword: FC = (props: PaperProps) => {
       }
 
       setIsPasswordReset(true);
-    } catch (error) {
+    } catch (error: any) {
+      form.setFieldError('password', error.response.errors.password);
       console.log(error);
     } finally {
       setLoading(false);

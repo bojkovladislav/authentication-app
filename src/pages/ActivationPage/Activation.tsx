@@ -3,11 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { activate } from '../../api/authorization';
 import { setItem } from '../../utils/localStorageHelpers';
 import { AuthorizedUserData } from '../../utils/Types';
+import { MessageBlock } from '../../components/MessageBlock/MessageBlock';
 
 interface Props {
-  setAuthorizedUserData: Dispatch<
-    SetStateAction<AuthorizedUserData>
-  >;
+  setAuthorizedUserData: Dispatch<SetStateAction<AuthorizedUserData>>;
 }
 
 export const Activation: FC<Props> = ({ setAuthorizedUserData }) => {
@@ -26,10 +25,14 @@ export const Activation: FC<Props> = ({ setAuthorizedUserData }) => {
       activate(activationToken)
         .then((res) => {
           const { name, email } = res.data.user;
-  
+
           setLoading(true);
           setItem('AuthorizedUserData', res.data);
-          setAuthorizedUserData({ name, email, accessToken: res.data.accessToken });
+          setAuthorizedUserData({
+            name,
+            email,
+            accessToken: res.data.accessToken,
+          });
           setMessage('You have been successfully activated!');
         })
         .catch(setError)
@@ -49,15 +52,20 @@ export const Activation: FC<Props> = ({ setAuthorizedUserData }) => {
     }
 
     if (currentSecond === 0) {
-      navigate('/');
+      navigate(`/${error && 'sign-up'}`);
     }
   }, [currentSecond, loading]);
 
   return (
-    <div>
-      <h1>{loading ? 'Loading...' : message}</h1>
-      {error && 'Failed to save your data: '}
-      <h2>{`You will be redirected to the home page in ${currentSecond}`}</h2>
-    </div>
+    <MessageBlock title="Activation page" error={error ? true : false}>
+      <p>{loading ? 'Loading...' : message}</p>
+      {error && <p>{'Failed to save your data'}</p>}
+      {message ||
+        (error && (
+          <p>{`You will be redirected to the ${
+            error ? 'registration' : 'home'
+          } page in ${currentSecond}`}</p>
+        ))}
+    </MessageBlock>
   );
 };

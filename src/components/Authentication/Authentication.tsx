@@ -21,6 +21,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { setItem } from '../../utils/localStorageHelpers.js';
 import { AuthorizedUserData, NotificationType } from '../../utils/Types.js';
+import { MessageBlock } from '../MessageBlock/MessageBlock.js';
 
 interface Props extends PaperProps {
   type: 'login' | 'register';
@@ -81,12 +82,9 @@ export function AuthenticationForm(props: Props) {
           'You have been successfully registered! Activate your email please!',
       });
     } catch (error: any) {
-      const errors = error.response.data.errors;
-      const message = error.response.data.message;
+      const { email, password } = error.response.data.errors;
 
-      setNotification({ message, error: true });
-
-      form.setErrors({ email: errors.email, password: errors.password });
+      form.setErrors({ email, password });
     } finally {
       setLoading(false);
     }
@@ -116,12 +114,9 @@ export function AuthenticationForm(props: Props) {
       });
       navigate('/');
     } catch (error: any) {
-      const errors = error.response.data.errors;
-      const message = error.response.data.message;
+      const { email, password } = error.response.data.errors;
 
-      setNotification({ message, error: true });
-
-      form.setErrors({ email: errors.email, password: errors.password });
+      form.setErrors({ email, password });
     } finally {
       setLoading(false);
     }
@@ -134,10 +129,10 @@ export function AuthenticationForm(props: Props) {
   return (
     <>
       {isActivationLinkSent ? (
-        <div>
-          <h1>Check your email!</h1>
-          <p>We have sent you an email with activation link</p>
-        </div>
+        <MessageBlock
+          title="Confirmation email has been sent."
+          message="Please check your email and confirm your account."
+        />
       ) : (
         <Paper radius="md" p="xl" withBorder>
           <Text size="lg" fw={500}>
@@ -146,7 +141,9 @@ export function AuthenticationForm(props: Props) {
 
           <Group grow mb="md" mt="md">
             <a href="http://auth-backend-hxdm.onrender.com/auth/google">
-              <GoogleButton radius="xl">Google</GoogleButton>
+              <GoogleButton radius="xl" fullWidth>
+                Google
+              </GoogleButton>
             </a>
           </Group>
 
