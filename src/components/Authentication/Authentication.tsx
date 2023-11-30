@@ -2,6 +2,7 @@ import { upperFirst } from '@mantine/hooks';
 import { useForm } from '@mantine/form';
 import { Dispatch, SetStateAction, useState } from 'react';
 import { login, register } from '../../api/authorization.js';
+import { useMediaQuery } from '@mantine/hooks';
 import {
   TextInput,
   PasswordInput,
@@ -34,6 +35,7 @@ export function AuthenticationForm(props: Props) {
   const { setNotification, type, setAuthorizedUserData } = props;
   const [loading, setLoading] = useState(false);
   const [isActivationLinkSent, setIsActivationLinkSent] = useState(false);
+  const onMobile = useMediaQuery('(max-width: 450px)');
 
   const form = useForm({
     initialValues: {
@@ -134,9 +136,11 @@ export function AuthenticationForm(props: Props) {
           message="Please check your email and confirm your account."
         />
       ) : (
-        <Paper radius="md" p="xl" withBorder>
-          <Text size="lg" fw={500}>
-            Welcome to Authentication app, {type} with
+        <Paper radius="md" p="lg" withBorder>
+          <Text size={onMobile ? 'md' : 'lg'} fw={500}>
+            {`Welcome to Authentication app! ${
+              type.charAt(0).toUpperCase() + type.slice(1)
+            } with`}
           </Text>
 
           <Group grow mb="md" mt="md">

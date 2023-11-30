@@ -21,10 +21,12 @@ export const ConfirmationPage: FC<Props> = ({ setNotification }) => {
     let timeout: number;
     updateEmail(confirmationToken)
       .then((response) => {
-        const { user } = getItem('AuthorizedUserData');
+        const userData = getItem('AuthorizedUserData');
+        const { user, accessToken } = userData;
 
         setItem('AuthorizedUserData', {
           user: { ...user, email: response.data.updatedUser.email },
+          accessToken,
         });
 
         timeout = setTimeout(() => {

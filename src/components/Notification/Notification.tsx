@@ -12,7 +12,7 @@ interface Props {
 }
 
 const Container = styled.div({
-  position: 'absolute',
+  position: 'fixed',
   width: '500px',
   bottom: 10,
   left: 10,
@@ -26,7 +26,7 @@ export const Notification: FC<Props> = ({
   const [show, setShow] = useState(true);
 
   useEffect(() => {
-    let timeout: number | null;
+    let timeout: any;
 
     if (notification.message.length) {
       timeout = setTimeout(() => {
@@ -39,7 +39,7 @@ export const Notification: FC<Props> = ({
         clearTimeout(timeout);
       }
     };
-  }, [notification]);
+  }, [notification.message]);
 
   return (
     <Container>

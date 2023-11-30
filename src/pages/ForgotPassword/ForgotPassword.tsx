@@ -31,19 +31,16 @@ export const ForgotPassword: FC = (props: PaperProps) => {
       await forgotPassword(form.values.email);
       setIsConfirmationSent(true);
     } catch (error: any) {
-      form.setFieldError('email', error.response.errors.email);
-      console.log(error);
+      form.setFieldError('email', error.response.data.errors.email);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Paper radius="md" p="xl" withBorder {...props}>
+    <Paper radius="md" p="md" withBorder {...props}>
       <Text size="lg" fw={500}>
-        {isConfirmationSent
-          ? 'We have just sent you a confirmation email. Check it out please!'
-          : 'Reset your password'}
+        Reset your password
       </Text>
 
       {isConfirmationSent ? (
@@ -58,7 +55,7 @@ export const ForgotPassword: FC = (props: PaperProps) => {
             onChange={(event) =>
               form.setFieldValue('email', event.currentTarget.value)
             }
-            error={form.errors.email && 'Invalid email'}
+            error={form.errors.email}
             radius="md"
           />
 

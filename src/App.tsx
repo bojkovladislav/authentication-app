@@ -108,7 +108,7 @@ function App() {
 
     const intervalId = setInterval(() => {
       silentRefreshAccessToken();
-    }, 30 * 60 * 1000);
+    }, 31 * 60 * 1000);
 
     return () => clearInterval(intervalId);
   }, [authorizedUserData.accessToken]);
@@ -199,18 +199,18 @@ function App() {
               <Route
                 path="/forgot-password"
                 element={
-                  <div style={{ width: '600px', margin: '0 auto' }}>
+                  <AuthFormWrapper>
                     <ForgotPassword />
-                  </div>
+                  </AuthFormWrapper>
                 }
               />
 
               <Route
                 path="/reset-password/:resetToken"
                 element={
-                  <div style={{ width: '600px', margin: '0 auto' }}>
+                  <AuthFormWrapper>
                     <ResetPassword />
-                  </div>
+                  </AuthFormWrapper>
                 }
               />
 

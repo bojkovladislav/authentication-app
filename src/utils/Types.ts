@@ -1,6 +1,6 @@
 export interface User {
   id: number;
-  name: string,
+  name: string;
   email: string;
   password: string;
   activationToken: null | string;
@@ -9,13 +9,13 @@ export interface User {
 }
 
 export interface NormalizedUser {
-  name: string | null,
-  email: string | null,
+  name: string | null;
+  email: string | null;
 }
 
 export interface NotificationType {
-  message: string,
-  error?: boolean,
+  message: string;
+  error?: boolean;
 }
 
 export interface AuthorizedUserData {
@@ -23,3 +23,11 @@ export interface AuthorizedUserData {
   email: string | null;
   accessToken: string | null;
 }
+
+export type Token = {
+  id: number;
+  email: string;
+  name: string;
+  iat: number;
+  exp: number;
+};
