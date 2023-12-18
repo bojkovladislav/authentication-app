@@ -18,7 +18,7 @@ export const ConfirmationPage: FC<Props> = ({ setNotification }) => {
 
     if (!confirmationToken) return;
 
-    let timeout: number;
+    let timeout: NodeJS.Timeout;
     updateEmail(confirmationToken)
       .then((response) => {
         const userData = getItem('AuthorizedUserData');
