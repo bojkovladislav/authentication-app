@@ -31,3 +31,11 @@ export type Token = {
   iat: number;
   exp: number;
 };
+
+export type UserData = {
+  user: {
+    name: string;
+    email: string;
+  };
+  accessToken: string;
+};
